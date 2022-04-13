@@ -60,7 +60,8 @@ class MainMenu(Menu):
             elif self.state == 3:
                 self.current_cursor = self.cursor1
                 self.state = 1
-            self.sound_menu_select.play()
+            if self.game.sound:
+                self.sound_menu_select.play()
         if self.game.UpKey:
             if self.state == 1:
                 self.current_cursor = self.cursor3
@@ -71,12 +72,12 @@ class MainMenu(Menu):
             elif self.state == 3:
                 self.current_cursor = self.cursor2
                 self.state = 2
-            self.sound_menu_select.play()
+            if self.game.sound:
+                self.sound_menu_select.play()
 
     def check_input(self):
         self.move_cursor()
         if self.game.EnterKey:
-            self.sound_menu_press.play()
             if self.state == 1:
                 self.game.playing = True
             elif self.state == 2:
@@ -84,6 +85,8 @@ class MainMenu(Menu):
             elif self.state == 3:
                 self.game.sound = not self.game.sound
             self.run_display = False
+            if self.game.sound:
+                self.sound_menu_press.play()
 
 
 class TutorialMenu(Menu):
@@ -96,7 +99,8 @@ class TutorialMenu(Menu):
             self.game.events()
 
             if self.game.EnterKey:
-                self.sound_menu_press.play()
+                if self.game.sound:
+                    self.sound_menu_press.play()
                 self.game.curr_menu = self.game.main_menu
                 self.run_display = False
 

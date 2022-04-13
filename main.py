@@ -1,3 +1,4 @@
+import random as rnd
 from menu import *
 from objects import *
 
@@ -13,11 +14,13 @@ class Game:
         self.resume = False
         self.game_completed = False
         self.sound = True
+
         self.LeftKey = False
         self.RightKey = False
         self.UpKey = False
         self.DownKey = False
         self.EnterKey = False
+        self.show_hitbox = False
 
         self.window_width = 1280
         self.window_height = 720
@@ -31,6 +34,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.fps = 120
         self.frames_count = 0
+        self.way = 0
 
         self.Back_color = (0, 70, 70)
         self.Font_color = (0, 70, 70)
@@ -44,6 +48,7 @@ class Game:
         self.curr_menu = self.main_menu
 
         self.entities = pygame.sprite.Group()
+        self.lines = pygame.sprite.Group()
         self.player = Player(self)
         self.entities.add(self.player)
 
@@ -78,6 +83,10 @@ class Game:
                     if self.playing:
                         self.playing = False
                         self.resume = True
+                if e.key == pygame.K_h:
+                    self.show_hitbox = not self.show_hitbox
+                if e.key == pygame.K_g:
+                    self.sound = not self.sound
 
             if e.type == pygame.KEYUP:
                 if e.key == pygame.K_d or e.key == pygame.K_RIGHT:
@@ -116,18 +125,30 @@ class Game:
 
             if self.frames_count % 60 == 0:
                 moving_line = MovingLine(self)
-                self.entities.add(moving_line)
-                self.entities.remove(self.player)
-                self.entities.add(self.player)
+                self.lines.add(moving_line)
+
+            if self.frames_count % 500 == 0:
+                self.way = rnd.randint(1,3)
+                test_item = Bonus(self, self.way, 1)
+                self.entities.add(test_item)
+
+            self.entities.remove(self.player)
+            self.entities.add(self.player)
+
+            for line in self.lines:
+                self.screen.blit(line.image, line.rect)
+                line.update()
+                if line.rect.y > self.window_height + 100:
+                    line.remove(self.lines)
 
             for e in self.entities:
                 self.screen.blit(e.image, e.rect)
-                if isinstance(e, MovingLine):
+                if isinstance(e, Bonus):
                     e.update()
-                    if e.rect.y > self.window_height + 100:
+                    if e.rect.y > self.window_height - 100:
                         e.remove(self.entities)
-                if isinstance(e, Player):
-                    e.update(self.LeftKey, self.RightKey)
+
+            self.player.update(self.LeftKey, self.RightKey)
 
             pygame.display.flip()
 

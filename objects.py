@@ -25,6 +25,9 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.Surface((self.width, self.height))
         self.image.fill((255, 255, 255))
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.hitbox_image = pygame.Surface((self.width, self.height / 2 - self.height / 3))
+        self.hitbox_image.fill((255, 0, 0))
+        self.hitbox = pygame.Rect(self.x, self.y + self.height / 2, self.width / 2, self.height)
         #self.image.set_colorkey((255, 255, 255))
 
     def draw(self, screen):
@@ -46,6 +49,58 @@ class Player(pygame.sprite.Sprite):
             self.rect.x = 20
         if self.rect.x >= self.game.window_width - self.width - 20:
             self.rect.x = self.game.window_width - self.width - 20
+
+        if self.game.show_hitbox:
+            self.hitbox_image.set_colorkey((0, 0, 0))
+        else:
+            self.hitbox_image.set_colorkey((255, 0, 0))
+
+        self.game.screen.blit(self.hitbox_image, self.hitbox)
+        self.hitbox.x = self.rect.x
+        self.hitbox.y = self.rect.y + self.height / 2
+        self.colide(self.game)
+
+    def colide(self, game):
+        for e in game.entities:
+            if pygame.sprite.collide_rect(self, e):
+                if isinstance(e, Bonus) and self.hitbox.colliderect(e):
+                    print("ВЗЯЛ")
+                    game.entities.remove(e)
+
+
+class Bonus(pygame.sprite.Sprite):
+    def __init__(self, game, way, type):
+        pygame.sprite.Sprite.__init__(self)
+        self.game = game
+        self.size = 32
+        self.way = way
+        if self.way == 1:
+            self.x = self.game.window_width / 2 - self.size / 2 - 50
+        elif self.way == 2:
+            self.x = self.game.window_width / 2 - self.size / 2
+        elif self.way == 3:
+            self.x = self.game.window_width / 2 - self.size / 2 + 75
+        self.y = self.game.window_height / 2 - 100
+        self.boost = 1
+        self.image = pygame.Surface((self.size, self.size))
+        self.image.fill((255, 255, 255))
+        self.image.set_colorkey((255, 255, 255))
+        self.rect = pygame.Rect(self.x, self.y, self.size, self.size)
+
+    def draw(self, screen):
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+
+    def update(self):
+        self.image = pygame.image.load(resource_path('resources/test.png'))
+        self.size += 1
+        self.image = pygame.transform.scale(self.image, (self.size, self.size))
+        if self.way == 1:
+            self.rect = pygame.Rect(self.rect.x - 2, self.rect.y, self.size, self.size)
+        elif self.way == 2:
+            self.rect = pygame.Rect(self.game.window_width / 2 - self.size / 2, self.rect.y, self.size, self.size)
+        elif self.way == 3:
+            self.rect = pygame.Rect(self.rect.x + 1, self.rect.y, self.size, self.size)
+        self.rect.y += 1
 
 
 class MovingLine(pygame.sprite.Sprite):
