@@ -29,17 +29,21 @@ class Game:
             self.screen_size,
             pygame.DOUBLEBUF | pygame.HWSURFACE
         )
-        pygame.display.set_caption("Be a smart car (indev)")
+        pygame.display.set_caption("Be a smart car (indev 0.2)")
         self.font = pygame.font.get_default_font()
         self.clock = pygame.time.Clock()
         self.fps = 120
         self.frames_count = 0
         self.way = 0
+        self.time_count = 1000
+        self.score = 0
+        self.time_str = ""
+        self.score_str = ""
 
-        self.Back_color = (0, 70, 70)
-        self.Font_color = (0, 70, 70)
+        self.Black_color = (0, 0, 0)
+        self.Font_color = (0, 220, 220)
         self.Line_color = (240, 2, 244)
-        self.Title_color = (106, 186, 151)
+        self.font = resource_path('resources/font/nk110.ttf')
         self.background = pygame.image.load(resource_path('resources/backgrounds/background.png'))
         self.rect = self.background.get_rect()
 
@@ -49,6 +53,10 @@ class Game:
 
         self.entities = pygame.sprite.Group()
         self.lines = pygame.sprite.Group()
+        self.lines.add(MovingLine(self, 0))
+        self.lines.add(MovingLine(self, 53))
+        self.lines.add(MovingLine(self, 144))
+        self.lines.add(MovingLine(self, 289))
         self.player = Player(self)
         self.entities.add(self.player)
 
@@ -85,7 +93,7 @@ class Game:
                         self.resume = True
                 if e.key == pygame.K_h:
                     self.show_hitbox = not self.show_hitbox
-                if e.key == pygame.K_g:
+                if e.key == pygame.K_m:
                     self.sound = not self.sound
 
             if e.type == pygame.KEYUP:
@@ -107,12 +115,26 @@ class Game:
         self.DownKey = False
         self.EnterKey = False
 
-    def draw_text(self, text, size, x, y, color):
+    def draw_text(self, text, size, x, y, color, centered):
         font = pygame.font.Font(self.font, size)
         text_surface = font.render(text, True, color)
         text_rect = text_surface.get_rect()
-        text_rect.center = (x, y)
+        if centered:
+            text_rect.center = (x, y)
+        else:
+            text_rect.x = x
+            text_rect.y = y
         self.screen.blit(text_surface, text_rect)
+
+    def game_over(self):
+        self.screen.fill(self.Black_color)
+        self.draw_text('You win', 120, self.window_width / 2, self.window_height / 2, self.Font_color, True)
+        pygame.display.flip()
+        pygame.time.wait(3000)
+        self.time_count = 1000
+        self.score = 0
+        self.playing = False
+        self.resume = False
 
     def loop(self):
         while self.playing:
@@ -120,12 +142,32 @@ class Game:
             self.frames_count += 1
             self.events()
 
-            self.screen.fill(self.Back_color)
+            self.screen.fill(self.Black_color)
             self.screen.blit(self.background, self.rect)
 
+            if self.time_count < 10:
+                self.time_str = "000" + str(self.time_count)
+            elif self.time_count < 100:
+                self.time_str = "00" + str(self.time_count)
+            elif self.time_count < 1000:
+                self.time_str = "0" + str(self.time_count)
+            else:
+                self.time_str = str(self.time_count)
+
+            self.draw_text(self.time_str, 100, 30, 0, self.Font_color, False)
+
+            if self.score < 10:
+                self.score_str = "00" + str(self.score) + "%"
+            elif self.score < 100:
+                self.score_str = "0" + str(self.score) + "%"
+            else:
+                self.score_str = str(self.score) + "%"
+
+            self.draw_text(self.score_str, 100, self.window_width - 230, 0, self.Font_color, False)
+
             if self.frames_count % 60 == 0:
-                moving_line = MovingLine(self)
-                self.lines.add(moving_line)
+                self.lines.add(MovingLine(self))
+                self.time_count -= 1
 
             if self.frames_count % 500 == 0:
                 self.way = rnd.randint(1,3)
@@ -149,7 +191,8 @@ class Game:
                         e.remove(self.entities)
 
             self.player.update(self.LeftKey, self.RightKey)
-
+            if self.time_count == 0 or self.score == 100:
+                self.game_over()
             pygame.display.flip()
 
 

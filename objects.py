@@ -64,7 +64,7 @@ class Player(pygame.sprite.Sprite):
         for e in game.entities:
             if pygame.sprite.collide_rect(self, e):
                 if isinstance(e, Bonus) and self.hitbox.colliderect(e):
-                    print("ВЗЯЛ")
+                    self.game.score += 50
                     game.entities.remove(e)
 
 
@@ -81,7 +81,7 @@ class Bonus(pygame.sprite.Sprite):
         elif self.way == 3:
             self.x = self.game.window_width / 2 - self.size / 2 + 75
         self.y = self.game.window_height / 2 - 100
-        self.boost = 1
+        self.speed = 0
         self.image = pygame.Surface((self.size, self.size))
         self.image.fill((255, 255, 255))
         self.image.set_colorkey((255, 255, 255))
@@ -93,18 +93,19 @@ class Bonus(pygame.sprite.Sprite):
     def update(self):
         self.image = pygame.image.load(resource_path('resources/test.png'))
         self.size += 1
+        self.speed = self.rect.y / 175
         self.image = pygame.transform.scale(self.image, (self.size, self.size))
         if self.way == 1:
-            self.rect = pygame.Rect(self.rect.x - 2, self.rect.y, self.size, self.size)
+            self.rect = pygame.Rect(self.rect.x - self.speed, self.rect.y, self.size, self.size)
         elif self.way == 2:
             self.rect = pygame.Rect(self.game.window_width / 2 - self.size / 2, self.rect.y, self.size, self.size)
         elif self.way == 3:
-            self.rect = pygame.Rect(self.rect.x + 1, self.rect.y, self.size, self.size)
-        self.rect.y += 1
+            self.rect = pygame.Rect(self.rect.x + self.speed, self.rect.y, self.size, self.size)
+        self.rect.y += self.speed
 
 
 class MovingLine(pygame.sprite.Sprite):
-    def __init__(self, game):
+    def __init__(self, game, h=0):
         pygame.sprite.Sprite.__init__(self)
         self.game = game
         self.width = self.game.window_width
@@ -115,7 +116,7 @@ class MovingLine(pygame.sprite.Sprite):
         self.image = pygame.Surface((self.width, self.height))
         self.image.fill(self.game.Line_color)
         self.image.set_alpha(200)
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.rect = pygame.Rect(self.x, self.y + h, self.width, self.height)
 
     def draw(self, screen):
         screen.blit(self.image, (self.rect.x, self.rect.y))

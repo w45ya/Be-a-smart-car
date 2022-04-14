@@ -25,9 +25,11 @@ class MainMenu(Menu):
         self.button_how = pygame.image.load(resource_path('resources/menu/button_how.png'))
         self.button_sound0 = pygame.image.load(resource_path('resources/menu/button_sound0.png'))
         self.button_sound1 = pygame.image.load(resource_path('resources/menu/button_sound1.png'))
+        self.button_continue = pygame.image.load(resource_path('resources/menu/button_continue.png'))
         self.cursor1 = pygame.image.load(resource_path('resources/menu/cursor1.png'))
         self.cursor2 = pygame.image.load(resource_path('resources/menu/cursor2.png'))
         self.cursor3 = pygame.image.load(resource_path('resources/menu/cursor3.png'))
+        self.cursor4 = pygame.image.load(resource_path('resources/menu/cursor4.png'))
 
         self.state = 1
         self.current_cursor = self.cursor1
@@ -37,10 +39,17 @@ class MainMenu(Menu):
         while self.run_display:
             self.game.events()
             self.check_input()
-            self.game.screen.fill(self.game.Back_color)
+            self.game.screen.fill(self.game.Black_color)
             self.game.screen.blit(self.game.background, self.rect)
             self.game.screen.blit(self.title, self.rect)
-            self.game.screen.blit(self.button_play, self.rect)
+            if not self.game.resume:
+                self.game.screen.blit(self.button_play, self.rect)
+                if self.state == 1:
+                    self.current_cursor = self.cursor1
+            else:
+                self.game.screen.blit(self.button_continue, self.rect)
+                if self.state == 1:
+                    self.current_cursor = self.cursor4
             self.game.screen.blit(self.button_how, self.rect)
             if self.game.sound:
                 self.game.screen.blit(self.button_sound1, self.rect)
@@ -58,7 +67,10 @@ class MainMenu(Menu):
                 self.current_cursor = self.cursor3
                 self.state = 3
             elif self.state == 3:
-                self.current_cursor = self.cursor1
+                if not self.game.resume:
+                    self.current_cursor = self.cursor1
+                else:
+                    self.current_cursor = self.cursor4
                 self.state = 1
             if self.game.sound:
                 self.sound_menu_select.play()
@@ -67,7 +79,10 @@ class MainMenu(Menu):
                 self.current_cursor = self.cursor3
                 self.state = 3
             elif self.state == 2:
-                self.current_cursor = self.cursor1
+                if not self.game.resume:
+                    self.current_cursor = self.cursor1
+                else:
+                    self.current_cursor = self.cursor4
                 self.state = 1
             elif self.state == 3:
                 self.current_cursor = self.cursor2
