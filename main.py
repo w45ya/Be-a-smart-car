@@ -29,14 +29,16 @@ class Game:
             self.screen_size,
             pygame.DOUBLEBUF | pygame.HWSURFACE
         )
-        pygame.display.set_caption("Be a smart car (indev 0.2)")
+        pygame.display.set_caption("Be a smart car (indev 0.3)")
         self.font = pygame.font.get_default_font()
         self.clock = pygame.time.Clock()
         self.fps = 120
         self.frames_count = 0
-        self.way = 0
-        self.time_count = 1000
+        self.bonus_way = 0
+        self.bonus_type = 0
+        self.time_default = 1000
         self.score = 0
+        self.time_count = self.time_default
         self.time_str = ""
         self.score_str = ""
 
@@ -44,7 +46,7 @@ class Game:
         self.Font_color = (0, 220, 220)
         self.Line_color = (240, 2, 244)
         self.font = resource_path('resources/font/nk110.ttf')
-        self.background = pygame.image.load(resource_path('resources/backgrounds/background.png'))
+        self.background = pygame.image.load(resource_path('resources/backgrounds/background.jpg'))
         self.rect = self.background.get_rect()
 
         self.main_menu = MainMenu(self)
@@ -126,12 +128,38 @@ class Game:
             text_rect.y = y
         self.screen.blit(text_surface, text_rect)
 
+    def time_to_string(self):
+        if self.time_count < 0:
+            return "0000"
+        if self.time_count < 10:
+            return "000" + str(self.time_count)
+        elif self.time_count < 100:
+            return "00" + str(self.time_count)
+        elif self.time_count < 1000:
+            return "0" + str(self.time_count)
+        else:
+            return str(self.time_count)
+
+    def score_to_string(self):
+        if self.score < 0:
+            return "000%"
+        elif self.score < 10:
+            return "00" + str(self.score) + "%"
+        elif self.score < 100:
+            return "0" + str(self.score) + "%"
+        else:
+            return "100%"
+
     def game_over(self):
         self.screen.fill(self.Black_color)
         self.draw_text('You win', 120, self.window_width / 2, self.window_height / 2, self.Font_color, True)
+        self.time_str = self.time_to_string()
+        self.draw_text(self.time_str, 100, 30, 0, self.Font_color, False)
+        self.score_str = self.score_to_string()
+        self.draw_text(self.score_str, 100, self.window_width - 230, 0, self.Font_color, False)
         pygame.display.flip()
         pygame.time.wait(3000)
-        self.time_count = 1000
+        self.time_count = self.time_default
         self.score = 0
         self.playing = False
         self.resume = False
@@ -145,37 +173,21 @@ class Game:
             self.screen.fill(self.Black_color)
             self.screen.blit(self.background, self.rect)
 
-            if self.time_count < 10:
-                self.time_str = "000" + str(self.time_count)
-            elif self.time_count < 100:
-                self.time_str = "00" + str(self.time_count)
-            elif self.time_count < 1000:
-                self.time_str = "0" + str(self.time_count)
-            else:
-                self.time_str = str(self.time_count)
-
+            self.time_str = self.time_to_string()
             self.draw_text(self.time_str, 100, 30, 0, self.Font_color, False)
-
-            if self.score < 10:
-                self.score_str = "00" + str(self.score) + "%"
-            elif self.score < 100:
-                self.score_str = "0" + str(self.score) + "%"
-            else:
-                self.score_str = str(self.score) + "%"
-
+            self.score_str = self.score_to_string()
             self.draw_text(self.score_str, 100, self.window_width - 230, 0, self.Font_color, False)
 
             if self.frames_count % 60 == 0:
                 self.lines.add(MovingLine(self))
                 self.time_count -= 1
 
-            if self.frames_count % 500 == 0:
-                self.way = rnd.randint(1,3)
-                test_item = Bonus(self, self.way, 1)
-                self.entities.add(test_item)
-
-            self.entities.remove(self.player)
-            self.entities.add(self.player)
+            if self.frames_count % 350 == 0:
+                self.bonus_way = rnd.randint(1, 3)
+                self.bonus_type = rnd.randint(1, 6)
+                self.entities.add(Bonus(self, self.bonus_way, self.bonus_type))
+                self.entities.remove(self.player)
+                self.entities.add(self.player)
 
             for line in self.lines:
                 self.screen.blit(line.image, line.rect)
@@ -189,9 +201,17 @@ class Game:
                     e.update()
                     if e.rect.y > self.window_height - 100:
                         e.remove(self.entities)
+                    if e.rect.y == 520:
+                        e.remove(self.entities)
+                        e.add(self.entities)
 
             self.player.update(self.LeftKey, self.RightKey)
-            if self.time_count == 0 or self.score == 100:
+
+            if self.time_count <= 0 or self.score >= 100:
+                if self.time_count < 0:
+                    self.time_count = 0
+                if self.score > 100:
+                    self.score = 100
                 self.game_over()
             pygame.display.flip()
 
