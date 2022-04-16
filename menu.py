@@ -102,6 +102,12 @@ class MainMenu(Menu):
             self.run_display = False
             if self.game.sound:
                 self.sound_menu_press.play()
+        if self.game.EscKey:
+            self.game.playing = True
+            self.run_display = False
+            self.game.reset_keys()
+            if self.game.sound:
+                self.sound_menu_press.play()
 
 
 class TutorialMenu(Menu):
@@ -113,12 +119,12 @@ class TutorialMenu(Menu):
         while self.run_display:
             self.game.events()
 
-            if self.game.EnterKey:
+            if self.game.EnterKey or self.game.EscKey:
                 if self.game.sound:
                     self.sound_menu_press.play()
                 self.game.curr_menu = self.game.main_menu
                 self.run_display = False
+                self.game.reset_keys()
 
-            self.game.screen.blit(self.game.background, self.rect)
-            self.game.screen.blit(self.title, self.rect)
+            self.game.screen.blit(self.game.tutorial_screen, self.rect)
             self.blit_screen()

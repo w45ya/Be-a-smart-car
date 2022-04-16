@@ -31,8 +31,9 @@ class Player(pygame.sprite.Sprite):
         self.image.set_colorkey((255, 255, 255))
         self.image = pygame.image.load(resource_path('resources/sprites/car.png'))
         self.count = 1
+        self.amplitude = 10
         self.text_timer = 0
-        self.text_duration = 200
+        self.text_duration = 150
         self.text = ""
 
     def draw(self, screen):
@@ -63,9 +64,9 @@ class Player(pygame.sprite.Sprite):
 
         self.count += 1
         if self.count > 60: self.count = 1
-        if self.count == 10 or self.count == 20 or self.count == 30:
+        if self.count == self.amplitude or self.count == self.amplitude * 2 or self.count == self.amplitude * 3:
             self.rect.y += 1
-        if self.count == 40 or self.count == 50 or self.count == 60:
+        if self.count == self.amplitude * 4 or self.count == self.amplitude * 5 or self.count == self.amplitude * 6:
             self.rect.y -= 1
 
         self.text_timer -= 1
@@ -91,6 +92,8 @@ class Player(pygame.sprite.Sprite):
                         self.game.score -= 10
                         self.text_timer = self.text_duration
                         self.text = "Время: -100 Готовность: -10%"
+                        if self.game.score < 0:
+                            self.game.score = 0
                     elif e.type == 4:                 # Подготовка диплома
                         self.game.time_count -= 100
                         self.game.score += 10
@@ -107,7 +110,7 @@ class Player(pygame.sprite.Sprite):
                         self.text_timer = self.text_duration
                         self.text = "Время: -50 Готовность: +5%"
                     else: # тест
-                        self.game.score += 50
+                        self.game.score += 100
                     self.game.entities.remove(e)
 
 

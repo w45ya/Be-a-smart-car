@@ -20,6 +20,7 @@ class Game:
         self.UpKey = False
         self.DownKey = False
         self.EnterKey = False
+        self.EscKey = False
         self.show_hitbox = False
 
         self.window_width = 1280
@@ -29,7 +30,7 @@ class Game:
             self.screen_size,
             pygame.DOUBLEBUF | pygame.HWSURFACE
         )
-        pygame.display.set_caption("Be a smart car (indev 0.3)")
+        pygame.display.set_caption("Be a smart car (indev 0.4)")
         self.font = pygame.font.get_default_font()
         self.clock = pygame.time.Clock()
         self.fps = 120
@@ -45,8 +46,11 @@ class Game:
         self.Black_color = (0, 0, 0)
         self.Font_color = (0, 220, 220)
         self.Line_color = (240, 2, 244)
+        self.Good_color = (28, 255, 165)
+        self.Well_color = (255, 252, 36)
         self.font = resource_path('resources/font/nk110.ttf')
         self.background = pygame.image.load(resource_path('resources/backgrounds/background.jpg'))
+        self.tutorial_screen = pygame.image.load(resource_path('resources/backgrounds/tutorial.jpg'))
         self.rect = self.background.get_rect()
 
         self.main_menu = MainMenu(self)
@@ -90,9 +94,13 @@ class Game:
                 if e.key == pygame.K_RETURN or e.key == pygame.K_KP_ENTER or e.key == pygame.K_SPACE:
                     self.EnterKey = True
                 if e.key == pygame.K_ESCAPE:
-                    if self.playing:
+                    self.EscKey = True
+                    if self.playing and not self.game_completed:
                         self.playing = False
                         self.resume = True
+                        self.EscKey = False
+                        if self.sound:
+                            self.main_menu.sound_menu_press.play()
                 if e.key == pygame.K_h:
                     self.show_hitbox = not self.show_hitbox
                 if e.key == pygame.K_m:
@@ -109,6 +117,8 @@ class Game:
                     self.DownKey = False
                 if e.key == pygame.K_RETURN or e.key == pygame.K_KP_ENTER or e.key == pygame.K_SPACE:
                     self.EnterKey = False
+                if e.key == pygame.K_ESCAPE:
+                    self.EscKey = False
 
     def reset_keys(self):
         self.LeftKey = False
@@ -116,6 +126,7 @@ class Game:
         self.UpKey = False
         self.DownKey = False
         self.EnterKey = False
+        self.EscKey = False
 
     def draw_text(self, text, size, x, y, color, centered):
         font = pygame.font.Font(self.font, size)
@@ -151,18 +162,38 @@ class Game:
             return "100%"
 
     def game_over(self):
-        self.screen.fill(self.Black_color)
-        self.draw_text('You win', 120, self.window_width / 2, self.window_height / 2, self.Font_color, True)
+        self.game_completed = True
+        self.screen.blit(self.background, self.rect)
+        for line in self.lines:
+            self.screen.blit(line.image, line.rect)
+        self.screen.blit(self.player.image, self.player.rect)
         self.time_str = self.time_to_string()
         self.draw_text(self.time_str, 100, 30, 0, self.Font_color, False)
         self.score_str = self.score_to_string()
         self.draw_text(self.score_str, 100, self.window_width - 230, 0, self.Font_color, False)
+        if self.score < 60:
+            self.draw_text('Не сдал.', 100, self.window_width / 2, self.window_height / 2 - self.window_height / 3 , self.Font_color, True)
+        elif self.score < 71:
+            self.draw_text('Cдал!', 100, self.window_width / 2, self.window_height / 2 - self.window_height / 3 , self.Font_color, True)
+            self.draw_text('Оценка: удовлетворительно', 100, self.window_width / 2, self.window_height / 2 - self.window_height / 3 + 100, self.Font_color, True)
+        elif self.score < 85:
+            self.draw_text('Cдал!', 100, self.window_width / 2, self.window_height / 2 - self.window_height / 3 , self.Font_color, True)
+            self.draw_text('Оценка: хорошо', 100, self.window_width / 2, self.window_height / 2 - self.window_height / 3 + 100, self.Good_color, True)
+        else:
+            self.draw_text('Cдал!', 100, self.window_width / 2, self.window_height / 2 - self.window_height / 3 , self.Font_color, True)
+            self.draw_text('Оценка: отлично!', 100, self.window_width / 2, self.window_height / 2 - self.window_height / 3 + 100, self.Well_color, True)
         pygame.display.flip()
-        pygame.time.wait(3000)
-        self.time_count = self.time_default
-        self.score = 0
-        self.playing = False
-        self.resume = False
+        if self.EnterKey or self.EscKey:
+            for e in self.entities:
+                if isinstance(e, Bonus):
+                    e.remove(self.entities)
+            self.time_count = self.time_default
+            self.score = 0
+            self.playing = False
+            self.resume = False
+            self.EnterKey = False
+            self.EscKey = False
+            self.game_completed = False
 
     def loop(self):
         while self.playing:
@@ -182,7 +213,7 @@ class Game:
                 self.lines.add(MovingLine(self))
                 self.time_count -= 1
 
-            if self.frames_count % 350 == 0:
+            if self.frames_count % 350 == 0 and not self.game_completed:
                 self.bonus_way = rnd.randint(1, 3)
                 self.bonus_type = rnd.randint(1, 6)
                 self.entities.add(Bonus(self, self.bonus_way, self.bonus_type))
