@@ -1,5 +1,4 @@
 import pygame
-import pyganim
 import sys
 import os
 
@@ -111,7 +110,10 @@ class Player(pygame.sprite.Sprite):
                         self.text = "Время: -50 Готовность: +5%"
                     else: # тест
                         self.game.score += 100
+                        self.game.time_count -= 9999
                     self.game.entities.remove(e)
+                    if self.game.sound:
+                        self.game.sound_bonus.play()
 
 
 class Bonus(pygame.sprite.Sprite):

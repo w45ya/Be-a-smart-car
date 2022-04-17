@@ -22,6 +22,9 @@ class Game:
         self.EnterKey = False
         self.EscKey = False
         self.show_hitbox = False
+        self.mouse_pressed = False
+        self.mouse_pos = (0, 0)
+        self.from_tutor_to_menu = False
 
         self.window_width = 1280
         self.window_height = 720
@@ -30,8 +33,8 @@ class Game:
             self.screen_size,
             pygame.DOUBLEBUF | pygame.HWSURFACE
         )
-        pygame.display.set_caption("Be a smart car (indev 0.4)")
-        self.font = pygame.font.get_default_font()
+        pygame.display.set_caption("Be a smart car v1.0")
+        pygame.display.set_icon(pygame.image.load(resource_path("resources/icon/icon.ico")))
         self.clock = pygame.time.Clock()
         self.fps = 120
         self.frames_count = 0
@@ -52,7 +55,21 @@ class Game:
         self.background = pygame.image.load(resource_path('resources/backgrounds/background.jpg'))
         self.tutorial_screen = pygame.image.load(resource_path('resources/backgrounds/tutorial.jpg'))
         self.rect = self.background.get_rect()
-
+        self.sound_menu_press = pygame.mixer.Sound(resource_path('resources/sound/menu_press.ogg'))
+        self.sound_menu_select = pygame.mixer.Sound(resource_path('resources/sound/menu_select.ogg'))
+        self.sound_bonus = pygame.mixer.Sound(resource_path('resources/sound/bonus.ogg'))
+        self.sound_game_start = pygame.mixer.Sound(resource_path('resources/sound/game_start.ogg'))
+        self.sound_game_lost = pygame.mixer.Sound(resource_path('resources/sound/game_lost.ogg'))
+        self.sound_game_win = pygame.mixer.Sound(resource_path('resources/sound/game_win.ogg'))
+        self.sound_excellent = pygame.mixer.Sound(resource_path('resources/sound/excellent.ogg'))
+        self.sound_music = pygame.mixer.Sound(resource_path('resources/sound/mativve_life-on-synthwave.ogg'))
+        self.sound_game_start.set_volume(0.3)
+        self.sound_game_lost.set_volume(0.2)
+        self.sound_game_win.set_volume(0.2)
+        self.sound_excellent.set_volume(0.1)
+        self.sound_menu_press.set_volume(0.5)
+        self.sound_menu_select.set_volume(0.5)
+        self.sound_bonus.set_volume(0.5)
         self.main_menu = MainMenu(self)
         self.tutor_menu = TutorialMenu(self)
         self.curr_menu = self.main_menu
@@ -100,11 +117,13 @@ class Game:
                         self.resume = True
                         self.EscKey = False
                         if self.sound:
-                            self.main_menu.sound_menu_press.play()
+                            self.sound_menu_press.play()
                 if e.key == pygame.K_h:
                     self.show_hitbox = not self.show_hitbox
                 if e.key == pygame.K_m:
                     self.sound = not self.sound
+                    if not self.sound:
+                        self.sound_off()
 
             if e.type == pygame.KEYUP:
                 if e.key == pygame.K_d or e.key == pygame.K_RIGHT:
@@ -120,6 +139,9 @@ class Game:
                 if e.key == pygame.K_ESCAPE:
                     self.EscKey = False
 
+        self.mouse_pressed = pygame.mouse.get_pressed()[0]
+        self.mouse_pos = pygame.mouse.get_pos()
+
     def reset_keys(self):
         self.LeftKey = False
         self.RightKey = False
@@ -127,6 +149,15 @@ class Game:
         self.DownKey = False
         self.EnterKey = False
         self.EscKey = False
+
+    def sound_off(self):
+        self.sound_game_start.stop()
+        self.sound_game_lost.stop()
+        self.sound_game_win.stop()
+        self.sound_excellent.stop()
+        self.sound_menu_press.stop()
+        self.sound_menu_select.stop()
+        self.sound_bonus.stop()
 
     def draw_text(self, text, size, x, y, color, centered):
         font = pygame.font.Font(self.font, size)
@@ -163,7 +194,9 @@ class Game:
 
     def game_over(self):
         self.game_completed = True
-        self.screen.blit(self.background, self.rect)
+        self.sound_music.stop()
+        if self.sound:
+            self.screen.blit(self.background, self.rect)
         for line in self.lines:
             self.screen.blit(line.image, line.rect)
         self.screen.blit(self.player.image, self.player.rect)
@@ -173,17 +206,24 @@ class Game:
         self.draw_text(self.score_str, 100, self.window_width - 230, 0, self.Font_color, False)
         if self.score < 60:
             self.draw_text('Не сдал.', 100, self.window_width / 2, self.window_height / 2 - self.window_height / 3 , self.Font_color, True)
+            if self.sound:
+                self.sound_game_lost.play()
         elif self.score < 71:
             self.draw_text('Cдал!', 100, self.window_width / 2, self.window_height / 2 - self.window_height / 3 , self.Font_color, True)
             self.draw_text('Оценка: удовлетворительно', 100, self.window_width / 2, self.window_height / 2 - self.window_height / 3 + 100, self.Font_color, True)
+            if self.sound:
+                self.sound_game_win.play()
         elif self.score < 85:
             self.draw_text('Cдал!', 100, self.window_width / 2, self.window_height / 2 - self.window_height / 3 , self.Font_color, True)
             self.draw_text('Оценка: хорошо', 100, self.window_width / 2, self.window_height / 2 - self.window_height / 3 + 100, self.Good_color, True)
+            if self.sound:
+                self.sound_game_win.play()
         else:
             self.draw_text('Cдал!', 100, self.window_width / 2, self.window_height / 2 - self.window_height / 3 , self.Font_color, True)
             self.draw_text('Оценка: отлично!', 100, self.window_width / 2, self.window_height / 2 - self.window_height / 3 + 100, self.Well_color, True)
-        pygame.display.flip()
-        if self.EnterKey or self.EscKey:
+            if self.sound:
+                self.sound_excellent.play()
+        if self.EnterKey or self.EscKey or self.mouse_pressed:
             for e in self.entities:
                 if isinstance(e, Bonus):
                     e.remove(self.entities)
@@ -194,16 +234,21 @@ class Game:
             self.EnterKey = False
             self.EscKey = False
             self.game_completed = False
+            if self.sound:
+                self.sound_menu_press.play()
+        pygame.display.flip()
+        if self.mouse_pressed:
+            pygame.time.wait(300)
 
     def loop(self):
+        self.sound_game_start.stop()
+        self.sound_music.play()
         while self.playing:
             self.clock.tick(self.fps)
             self.frames_count += 1
             self.events()
-
             self.screen.fill(self.Black_color)
             self.screen.blit(self.background, self.rect)
-
             self.time_str = self.time_to_string()
             self.draw_text(self.time_str, 100, 30, 0, self.Font_color, False)
             self.score_str = self.score_to_string()
@@ -213,7 +258,7 @@ class Game:
                 self.lines.add(MovingLine(self))
                 self.time_count -= 1
 
-            if self.frames_count % 350 == 0 and not self.game_completed:
+            if self.frames_count % 300 == 0 and not self.game_completed:
                 self.bonus_way = rnd.randint(1, 3)
                 self.bonus_type = rnd.randint(1, 6)
                 self.entities.add(Bonus(self, self.bonus_way, self.bonus_type))
