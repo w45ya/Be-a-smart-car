@@ -12,7 +12,7 @@
 
 Все звуки и музыка взяты с freesound.org: 
 - [Mativve - Life on synthwave](https://freesound.org/people/Mativve/sounds/561080/)
-- [MaxMusic - Retrowave Bass Funky 80's.wav](https://freesound.org/people/MaxMusic/sounds/614637/)
+- [MaxMusic - Retrowave Bass Funky 80's](https://freesound.org/people/MaxMusic/sounds/614637/)
 - [Kleber_KGF - Victory MIDI](https://freesound.org/people/Kleber_KGF/sounds/536190/)
 - [FunWithSound - Success Resolution Video Game Fanfare Sound Effect](https://freesound.org/people/FunWithSound/sounds/456968/)
 - [noirenex - Life Lost Game Over](https://freesound.org/people/noirenex/sounds/159408/)
