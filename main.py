@@ -158,6 +158,7 @@ class Game:
         self.sound_menu_press.stop()
         self.sound_menu_select.stop()
         self.sound_bonus.stop()
+        self.sound_music.stop()
 
     def draw_text(self, text, size, x, y, color, centered):
         font = pygame.font.Font(self.font, size)
@@ -242,7 +243,8 @@ class Game:
 
     def loop(self):
         self.sound_game_start.stop()
-        self.sound_music.play()
+        if self.sound and not self.resume:
+            self.sound_music.play(-1)
         while self.playing:
             self.clock.tick(self.fps)
             self.frames_count += 1

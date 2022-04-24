@@ -139,6 +139,8 @@ class MainMenu(Menu):
                     self.game.sound_off()
                 if self.game.sound:
                     self.game.screen.blit(self.button_sound1, self.rect)
+                    if self.game.resume:
+                        self.game.sound_music.play()
                 else:
                     self.game.screen.blit(self.button_sound0, self.rect)
             if self.game.sound:
